@@ -2,20 +2,25 @@
 
 ``settings.AUDIT_SCOPE_MODEL`` and ``settings.AUDIT_IDENTITY_MODEL`` hold
 ``"app_label.ModelName"`` strings. Field definitions can use those strings
-directly, but runtime code needs the class -- and must not import it at module
-scope, because this app's modules are imported while the app registry is still
-populating. Every function here resolves lazily, at call time.
-"""
+directly, but runtime code needs the class -- and must not import *the model*
+at module scope, because this app's modules are imported while the app registry
+is still populating. Every function here resolves lazily, at call time.
 
-from typing import TYPE_CHECKING
+``django.db.models`` itself is a different matter and is imported normally. It
+must not go under ``TYPE_CHECKING``: this module has no
+``from __future__ import annotations``, so on Python 3.14 the annotations below
+are evaluated the moment anything reads ``__annotations__`` -- which Django and
+most dependency-injection wiring do while introspecting a module -- and the name
+would not be bound.
+"""
 
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 
-from vinta_audit_logs import conf
+# Moving this import is what broke 0.1.0, and the rule will keep offering to.
+from django.db import models  # noqa: TC002
 
-if TYPE_CHECKING:
-    from django.db import models
+from vinta_audit_logs import conf
 
 
 def _resolve(setting_name: str, default: str) -> type[models.Model]:

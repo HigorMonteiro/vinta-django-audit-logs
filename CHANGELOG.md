@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-26
+
+### Fixed
+
+- `models_registry` imported `django.db.models` under `TYPE_CHECKING` while having
+  no `from __future__ import annotations`, so on Python 3.14 the module raised
+  `NameError: name 'models' is not defined` the moment anything read its
+  `__annotations__`. Django's introspection and most dependency-injection wiring
+  do exactly that, so a host project failed at `manage.py check` — importing the
+  module, calling its functions and type-checking it all passed. A test now walks
+  every module in the package and reads its annotations the way a host would.
+
 ## [0.1.0] - 2026-08-26
 
 First release. Extracted from a production Django project, generalised so the two
@@ -66,5 +78,6 @@ is — are swappable models rather than assumptions.
 - `compute_diff`, and the invariant it upholds: a diff is None or a non-empty dict,
   never `{}`, so `has_diff` keeps meaning something.
 
-[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.1
 [0.1.0]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.0
