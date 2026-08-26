@@ -7,11 +7,15 @@ scope, because this app's modules are imported while the app registry is still
 populating. Every function here resolves lazily, at call time.
 """
 
+from typing import TYPE_CHECKING
+
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
-from django.db import models
 
 from vinta_audit_logs import conf
+
+if TYPE_CHECKING:
+    from django.db import models
 
 
 def _resolve(setting_name: str, default: str) -> type[models.Model]:

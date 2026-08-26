@@ -7,7 +7,11 @@ name = "vinta-django-audit-logs"
 version = "0.1.0"
 description = "An append-only audit log for Django, with swappable scope and identity models, a portable query object and pluggable storage backends."
 readme = "README.md"
-requires-python = ">=3.12"
+# uuid7 landed in the standard library in 3.14, and the record identity
+# column depends on it: a time-ordered uuid is what keeps the unique index on
+# an append-only table taking its inserts at the right edge rather than
+# scattered across the tree.
+requires-python = ">=3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Vinta Software", email = "contact@vinta.com.br" }]
@@ -30,8 +34,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Logging",
@@ -82,7 +84,7 @@ include = [
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
 line-length = 99
-target-version = "py312"
+target-version = "py314"
 src = ["vinta_audit_logs", "tests"]
 extend-exclude = ["*/migrations/*"]
 

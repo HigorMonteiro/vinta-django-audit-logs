@@ -84,7 +84,7 @@ def _parse_int(value: str | None) -> int | None:
         return None
     try:
         return int(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -99,7 +99,7 @@ def _parse_datetime(value: str | None) -> datetime | None:
         return None
     try:
         parsed = datetime.fromisoformat(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
     return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed
 
