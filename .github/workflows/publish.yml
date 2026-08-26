@@ -110,7 +110,11 @@ jobs:
         with:
           inputs: ./dist/*.tar.gz ./dist/*.whl
 
+      # --clobber because the sigstore action has already attached the bundles it
+      # produced: without it this step fails on "asset under the same name
+      # already exists" and reports the whole release as broken, after the
+      # publish it is downstream of has already succeeded.
       - name: Upload to the GitHub release
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" dist/** --repo "${GITHUB_REPOSITORY}"
+        run: gh release upload "${GITHUB_REF_NAME}" dist/** --repo "${GITHUB_REPOSITORY}" --clobber
