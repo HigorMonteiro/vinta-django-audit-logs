@@ -1,0 +1,140 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Audit record #{{ record.id }} | {% trans "Site administration" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label='vinta_audit_logs' %}">Audit</a>
+  &rsaquo; <a href="{% url 'admin:vinta_audit_logs_audit_changelist' %}">Audit records</a>
+  &rsaquo; Record #{{ record.id }}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Audit Record #{{ record.id }}</h1>
+
+<div style="background: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 2em; margin-bottom: 2em;">
+
+  <!-- Basic fields -->
+  <h2>Overview</h2>
+  <dl style="display: grid; grid-template-columns: 150px 1fr; gap: 1em; margin-bottom: 2em;">
+    <dt><strong>ID</strong></dt>
+    <dd>{{ record.id }}</dd>
+
+    <dt><strong>UID</strong></dt>
+    <dd>{{ record.uid }}</dd>
+
+    <dt><strong>Scope</strong></dt>
+    <dd>{{ record.scope.label|default:record.scope.scope_key|default:"-" }}
+        <span style="color:#999;">({{ record.scope.scope_type }})</span></dd>
+
+    <dt><strong>Created at</strong></dt>
+    <dd>{{ record.created_at|date:"Y-m-d H:i:s" }}</dd>
+
+    <dt><strong>Action</strong></dt>
+    <dd>{{ record.action_key }}</dd>
+  </dl>
+
+  <!-- Actor snapshot -->
+  <h2>Actor</h2>
+  <dl style="display: grid; grid-template-columns: 150px 1fr; gap: 1em; margin-bottom: 2em;">
+    <dt><strong>Actor Type</strong></dt>
+    <dd>{{ record.actor.identity_type }}</dd>
+
+    <dt><strong>Actor</strong></dt>
+    <dd>{{ record.actor.identity_label|default:"-" }}
+        <span style="color:#999;">({{ record.actor.identity_key|default:"no id" }})</span></dd>
+
+    <dt><strong>Staff / Superuser</strong></dt>
+    <dd>{{ record.actor.is_staff|yesno:"yes,no" }} / {{ record.actor.is_superuser|yesno:"yes,no" }}</dd>
+
+    {% if record.actor.group_names %}
+    <dt><strong>Groups at the time</strong></dt>
+    <dd>
+      <ul style="margin: 0; padding-left: 1.5em;">
+        {% for group_name in record.actor.group_names %}
+        <li>{{ group_name }}</li>
+        {% endfor %}
+      </ul>
+    </dd>
+    {% endif %}
+
+    {% if actor_metadata %}
+    <dt><strong>Captured context</strong></dt>
+    <dd>
+      <ul style="margin: 0; padding-left: 1.5em;">
+        {% for key, value in actor_metadata %}
+        <li><strong>{{ key }}</strong>: {{ value }}</li>
+        {% endfor %}
+      </ul>
+    </dd>
+    {% endif %}
+
+    {% if record.on_behalf_of %}
+    <dt><strong>On behalf of</strong></dt>
+    <dd>{{ record.on_behalf_of.identity_label|default:record.on_behalf_of.identity_key }}
+        <span style="color:#999;">({{ record.on_behalf_of.identity_type }})</span></dd>
+    {% endif %}
+  </dl>
+
+  <!-- Subject reference -->
+  <h2>Subject</h2>
+  <dl style="display: grid; grid-template-columns: 150px 1fr; gap: 1em; margin-bottom: 2em;">
+    <dt><strong>Subject Type</strong></dt>
+    <dd>{{ record.subject.subject_type }}</dd>
+
+    <dt><strong>Subject ID</strong></dt>
+    <dd>{{ record.subject.subject_id }}</dd>
+
+    {% if record.subject.subject_label %}
+    <dt><strong>Subject Label</strong></dt>
+    <dd>{{ record.subject.subject_label }}</dd>
+    {% endif %}
+  </dl>
+
+  <!-- Diff (if present) -->
+  {% if formatted_diff %}
+  <h2>Changes (Diff)</h2>
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 2em;">
+    <thead>
+      <tr style="background: #f0f0f0; border-bottom: 2px solid #ccc;">
+        <th style="padding: 0.75em; text-align: left; border-right: 1px solid #ccc;">Field</th>
+        <th style="padding: 0.75em; text-align: left; border-right: 1px solid #ccc;">Old Value</th>
+        <th style="padding: 0.75em; text-align: left;">New Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for change in formatted_diff %}
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 0.75em; border-right: 1px solid #eee; font-weight: bold;">{{ change.field }}</td>
+        <td style="padding: 0.75em; border-right: 1px solid #eee; background: #ffe6e6; font-family: monospace; white-space: pre-wrap; word-break: break-word;">{{ change.old|default:"-" }}</td>
+        <td style="padding: 0.75em; background: #e6ffe6; font-family: monospace; white-space: pre-wrap; word-break: break-word;">{{ change.new|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Affected memberships (if any) -->
+  {% if record.affected %}
+  <h2>Affected</h2>
+  <div style="background: #f9f9f9; border: 1px solid #ddd; padding: 1em; border-radius: 3px; margin-bottom: 2em;">
+    <ul style="margin: 0; padding-left: 1.5em;">
+      {% for identity in record.affected %}
+      <li>{{ identity.identity_label|default:identity.identity_key }}
+          <span style="color:#999;">({{ identity.identity_type }})</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Back button -->
+<div style="margin-top: 2em;">
+  <a href="{% url 'admin:vinta_audit_logs_audit_changelist' %}" class="button">Back to Audit Records</a>
+</div>
+
+{% endblock %}
