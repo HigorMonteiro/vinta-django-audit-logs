@@ -15,6 +15,18 @@ class Migration(migrations.Migration):
     dependencies = [
         ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        # Added by hand, and they have to be. The autodetector generated this
+        # migration against the models this app ships, where the scope and
+        # identity live in this very app -- so it saw nothing to depend on and
+        # wrote nothing. The moment a project swaps either model out, the foreign
+        # keys below point into *that* project's app, and without these the graph
+        # is free to run this migration first and fail with "Related model
+        # cannot be resolved".
+        #
+        # Safe when nothing is swapped: Django ignores a "__first__" dependency
+        # that refers to the migration's own app (#22325).
+        migrations.swappable_dependency(settings.AUDIT_SCOPE_MODEL),
+        migrations.swappable_dependency(settings.AUDIT_IDENTITY_MODEL),
     ]
 
     operations = [

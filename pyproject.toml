@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vinta-django-audit-logs"
-version = "0.1.1"
+version = "0.1.2"
 description = "An append-only audit log for Django, with swappable scope and identity models, a portable query object and pluggable storage backends."
 readme = "README.md"
 # uuid7 landed in the standard library in 3.14, and the record identity

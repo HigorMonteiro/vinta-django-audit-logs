@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-26
+
+### Fixed
+
+- The initial migration declared no `swappable_dependency` on the scope and
+  identity models. It was generated against the models this app ships, where both
+  live in this app, so the autodetector saw nothing to depend on — but as soon as
+  a project swaps either one out, the foreign keys point into that project's app
+  and the migration graph was free to run this app first and fail with
+  `Related model 'yourapp.yourmodel' cannot be resolved`. Whether it did came down
+  to app ordering, which is why the swapped test run had not caught it. Both
+  dependencies are now declared, and Django ignores them when nothing is swapped.
+
 ## [0.1.1] - 2026-08-26
 
 ### Fixed
@@ -78,6 +91,7 @@ is — are swappable models rather than assumptions.
 - `compute_diff`, and the invariant it upholds: a diff is None or a non-empty dict,
   never `{}`, so `has_diff` keeps meaning something.
 
-[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.2
 [0.1.1]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.1
 [0.1.0]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.0
