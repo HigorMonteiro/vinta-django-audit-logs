@@ -6,7 +6,7 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
   <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-  &rsaquo; <a href="{% url 'admin:app_list' app_label='vinta_audit_logs' %}">Audit</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Audit</a>
   &rsaquo; <a href="{% url 'admin:vinta_audit_logs_audit_changelist' %}">Audit records</a>
   &rsaquo; Record #{{ record.id }}
 </div>

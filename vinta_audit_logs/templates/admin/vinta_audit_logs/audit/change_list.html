@@ -6,7 +6,7 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
   <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-  &rsaquo; <a href="{% url 'admin:app_list' app_label='audit' %}">Audit</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Audit</a>
   &rsaquo; Audit records
 </div>
 {% endblock %}

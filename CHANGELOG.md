@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-26
+
+### Fixed
+
+- The admin changelist returned 500 in every project that installs this package.
+  Its breadcrumb reversed `admin:app_list` with `app_label='audit'` — the label
+  this code carried inside the project it was extracted from. No installing
+  project has an `audit` app, so the reverse raised `NoReverseMatch` and took the
+  whole page down with it. Both breadcrumbs now read the label from `opts`, which
+  the views already put in the context, so neither can go stale again.
+
+  The detail template named the right label and worked; only the changelist was
+  affected — which is to say the one page the log is normally read through.
+
+  **Anyone using the admin needs this.** Nothing else changed: the log, the
+  service, the repositories and the query object are untouched.
+
+### Added
+
+- Tests that actually render the admin — the changelist, the detail page, the CSV
+  export, the read-only denials and the anonymous redirect. Every one of those
+  views is repository-backed and every template is this package's own, which is
+  the combination a unit test of the underlying call cannot cover: the bug above
+  lived in a template, and the suite had nothing that asked for a page.
+
 ## [0.1.2] - 2026-08-26
 
 ### Fixed
@@ -91,7 +116,8 @@ is — are swappable models rather than assumptions.
 - `compute_diff`, and the invariant it upholds: a diff is None or a non-empty dict,
   never `{}`, so `has_diff` keeps meaning something.
 
-[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/vintasoftware/vinta-django-audit-logs/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.3
 [0.1.2]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.2
 [0.1.1]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.1
 [0.1.0]: https://github.com/vintasoftware/vinta-django-audit-logs/releases/tag/v0.1.0
