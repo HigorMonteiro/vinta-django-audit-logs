@@ -11,9 +11,12 @@ The two functions are inverses and must change together.
 from __future__ import annotations
 
 import dataclasses
+import json
 import uuid
 from datetime import datetime
 from typing import Any
+
+from django.core.serializers.json import DjangoJSONEncoder
 
 from vinta_audit_logs.types import (
     AuditRecordData,
@@ -26,8 +29,16 @@ from vinta_audit_logs.types import (
 def serialize_record_data(data: AuditRecordData) -> dict:
     """Reduce an ``AuditRecordData`` to a dict that survives ``json.dumps``.
 
-    Only two fields are not JSON scalars, so only two are converted by hand:
-    ``uid`` to its string form and ``created_at`` to ISO 8601.
+    ``uid`` and ``created_at`` are converted by hand, to the exact string forms
+    the rest of this module expects back. Everything else is run through
+    ``DjangoJSONEncoder`` and decoded again: ``diff`` and the identity
+    snapshots' ``metadata`` are free-form, caller-filled dicts that routinely
+    carry a datetime, a Decimal or a UUID (``compute_diff`` is documented to
+    preserve exactly these), and the plain encoder ``json.dumps`` would
+    otherwise use raises on every one of them. Doing it once here, rather than
+    hoping every dispatcher and every repository tolerates whatever a caller
+    put in a diff, is what makes the "survives json.dumps" promise actually
+    true.
 
     Args:
         data: The record data to serialize.
@@ -38,7 +49,7 @@ def serialize_record_data(data: AuditRecordData) -> dict:
     payload = dataclasses.asdict(data)
     payload["uid"] = str(data.uid)
     payload["created_at"] = data.created_at.isoformat() if data.created_at else None
-    return payload
+    return json.loads(json.dumps(payload, cls=DjangoJSONEncoder))
 
 
 def _snapshot_from_payload(payload: dict[str, Any] | None) -> IdentitySnapshot | None:

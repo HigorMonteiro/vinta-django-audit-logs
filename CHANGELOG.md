@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A diff or an identity's `metadata` carrying a value `compute_diff` is explicitly
+  documented to preserve -- a `datetime`, a `Decimal`, a `UUID` -- could not
+  actually be persisted. `Audit.diff` and `AbstractAuditIdentity.metadata` were
+  plain `JSONField`s with no encoder, so `DjangoORMAuditRepository.bulk_add`
+  raised `TypeError: Object of type datetime is not JSON serializable` the moment
+  either held one, and the record was never written. `AuditService.record`'s
+  payload had the same gap one layer up: `serialize_record_data` promised a dict
+  that survives `json.dumps` but only hand-converted `uid` and `created_at`, so
+  the same diff crashed `dispatch_via_celery`'s `.delay()` before the write was
+  even attempted -- caught and logged by `AuditService.record`'s dispatch
+  wrapper, so the record was lost silently rather than with a traceback.
+
+  Both fields now use `DjangoJSONEncoder`, and `serialize_record_data` runs its
+  whole payload through the same encoder rather than converting two fields by
+  hand. Dated field changes -- exactly the case the project's own guided demo
+  reconciles medication doses against -- are the most likely value to trip this;
+  the regression tests cover a raw `datetime` through both the ORM write and the
+  dispatch payload, plus a `Decimal` and a `UUID` for the other common cases a
+  project's diff might carry.
+
+  **Anyone recording a diff over a value that is not a plain JSON scalar needs
+  this.** Nothing else changed: the diff's shape, the query semantics and every
+  other field are untouched.
+
 ## [0.1.3] - 2026-08-26
 
 ### Fixed

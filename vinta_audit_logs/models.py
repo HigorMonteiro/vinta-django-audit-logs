@@ -26,6 +26,7 @@ import uuid
 from typing import ClassVar
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import F
 from django.utils import timezone
@@ -260,7 +261,12 @@ class AbstractAuditIdentity(TimeStampedModel):
     # to. Here rather than in project columns so a project can extend the
     # snapshot without swapping the model out; a project that wants real
     # columns swaps it out and gets both.
-    metadata = models.JSONField(default=dict, blank=True)
+    #
+    # ``DjangoJSONEncoder`` because this is a free-form bag a caller fills with
+    # whatever is on hand at emit time -- a datetime, a Decimal, a UUID -- and
+    # the plain ``json`` encoder a bare ``JSONField`` would otherwise use raises
+    # on every one of those.
+    metadata = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder)
 
     class Meta:
         abstract = True
@@ -429,7 +435,12 @@ class Audit(models.Model):
     # ``{field: {"old": ..., "new": ...}}``. Always either None or a NON-EMPTY
     # dict -- the repository normalizes ``{}`` to None so the ``has_diff``
     # filter stays meaningful.
-    diff = models.JSONField(null=True, blank=True)
+    #
+    # ``compute_diff`` deliberately preserves whatever the caller's before/after
+    # dicts hold without inspecting it, so a diffed field that is a datetime, a
+    # Decimal or a UUID is an ordinary, expected diff value, not a misuse --
+    # ``DjangoJSONEncoder`` is what lets this column actually store one.
+    diff = models.JSONField(null=True, blank=True, encoder=DjangoJSONEncoder)
 
     affected_identities = models.ManyToManyField(
         IDENTITY_MODEL,

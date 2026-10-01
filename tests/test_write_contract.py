@@ -93,6 +93,45 @@ def test_empty_diff_is_stored_as_null(repository):
     assert repository.query(AuditQuery(has_diff=False)).total == 1
 
 
+def test_a_diff_with_a_raw_datetime_value_round_trips_through_the_orm(repository):
+    """``compute_diff`` preserves a dated field change as-is; this column must store it.
+
+    ``diff`` is a free-form bag the caller fills with whatever the before/after
+    state held, so a raw ``datetime`` -- the exact shape
+    ``test_non_serializable_values_preserved`` in ``test_diff.py`` pins for
+    ``compute_diff`` -- is an ordinary diff value, not a misuse. A ``JSONField``
+    with no encoder raises ``TypeError`` on it; this one must not.
+    """
+    stored = repository.add(
+        record_data(
+            diff={
+                "suspended_until": {
+                    "old": datetime(2026, 1, 1, tzinfo=UTC),
+                    "new": datetime(2026, 6, 1, tzinfo=UTC),
+                }
+            }
+        )
+    )
+
+    assert stored.diff == {
+        "suspended_until": {"old": "2026-01-01T00:00:00Z", "new": "2026-06-01T00:00:00Z"}
+    }
+
+
+def test_identity_metadata_with_a_raw_datetime_round_trips_through_the_orm(repository):
+    """``metadata`` is the same kind of free-form, caller-filled bag as ``diff``."""
+    stored = repository.add(
+        record_data(
+            actor=IdentitySnapshot(
+                identity_key="7",
+                metadata={"token_issued_at": datetime(2026, 1, 1, tzinfo=UTC)},
+            )
+        )
+    )
+
+    assert stored.actor.metadata == {"token_issued_at": "2026-01-01T00:00:00Z"}
+
+
 def test_deleting_an_identity_is_refused_while_a_record_points_at_it(repository):
     """PROTECT, not CASCADE: the log outlives the dimensions it points at."""
     repository.add(record_data())
